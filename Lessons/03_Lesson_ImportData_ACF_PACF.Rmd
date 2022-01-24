@@ -35,7 +35,7 @@ For this first example we will import water inflow data for reservoirs in Brazil
 ```{r}
 #Importing time series data from text file
 #I am calling it raw for now because it's data as it is in the file
-raw_inflow_data <- read.table(file="/Users/lmm89/OneDrive/Duke_University/9_Spring2022/ENV790_TSA/Git_Repo/ENV790_TimeSeriesAnalysis_Sp2022_v2/Data/inflowtimeseries.txt",header=FALSE,skip=0)
+raw_inflow_data <- read.table(file="/Users/RichardZ/Downloads/ENV790_TimeSeriesAnalysis_Sp2022/Data/inflowtimeseries.txt",header=FALSE,skip=0)
 
 #If you want specific columns just trim the table
 raw_inflow_data <- raw_inflow_data[,1:5] #the space before the comma means you want all rows

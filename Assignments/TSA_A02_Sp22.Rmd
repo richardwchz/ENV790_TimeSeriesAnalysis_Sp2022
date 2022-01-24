@@ -113,7 +113,7 @@ acf(ts_energy[,1], lag=40, pl=TRUE)
 acf(ts_energy[,2], lag=40, pl=TRUE)
 acf(ts_energy[,3], lag=40, pl=TRUE)
 ```
-
+##Only the first two plots have the similar behavior. Biomass energy production shows strong autocorrelation, which means there is a strong relationship between its current values and its past values. Renewable energy production's plot shows weaker autocorrelation, while hydroelectric energy production's plot implies there's little or no autocorrelation. Both renewable energy production and hydroelectric energy production's plots show seasonality in autocorrelations. All three plots show decreases in the levels of autocorrelations as time passes.
 
 ## Question 7
 Compute the partial autocorrelation function from lag 1 to lag 40 for these three variables. How these plots differ from the ones in Q6?
@@ -123,5 +123,5 @@ pacf(ts_energy[,1], lag=40, pl=TRUE)
 pacf(ts_energy[,2], lag=40, pl=TRUE)
 pacf(ts_energy[,3], lag=40, pl=TRUE)
 ```
-
+##The partial autocorrelation plots show weak or no autocorrelations for all three types of energy productions.
 
