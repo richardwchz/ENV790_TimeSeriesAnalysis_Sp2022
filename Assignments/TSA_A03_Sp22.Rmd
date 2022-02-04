@@ -1,11 +1,11 @@
 ---
 title: "ENV 790.30 - Time Series Analysis for Energy Data | Spring 2022"
 subtitle: "Assignment 3 - Due date 02/08/22"
-author: "Student Name"
+author: "Richard Zhang"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
   
 ## Directions
@@ -31,25 +31,155 @@ R packages needed for this assignment:"forecast","tseries", and "Kendall". Insta
 
 ```{r}
 #Load/install required package here
-
+library(forecast)
+library(tseries)
+library(Kendall)
+library(readxl)
+library(ggplot2)
 ```
 
 ##Trend Component
 
 ### Q1
-Create a plot window that has one row and three columns. And then for each object on your data frame, fill the plot window with time series plot, ACF and PACF. You may use the some code form A2, but I want all three plots on the same window this time. (Hint: use par() function)
+Create a plot window that has one row and three columns. And then for each object on your data frame, fill the plot window with time series plot, ACF and PACF. You may use the some code from A2, but I want all three plots on the same window this time. (Hint: use par() function)
+
+```{r Import data}
+energy_data <- read_excel("/Users/RichardZ/Downloads/ENV790_TimeSeriesAnalysis_Sp2022/Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx", skip=10)
+
+energy_data <- energy_data[-1,1:6]
+energy_data <- energy_data[,-(2:3)]
+
+nproduction <- ncol(energy_data)-1
+nobservation <- nrow(energy_data) 
+
+date <- as.Date(energy_data$Month, format = "%Y-%m-%d")
+
+head(energy_data)
+str(energy_data)
+tail(energy_data)
+```
+
+```{r Q1}
+ts_energy_data <- ts(energy_data[,2:4],start=date[1],frequency=12)
+
+for(i in 1:nproduction){
+  par(mfrow=c(1,3))
+  plot(ts_energy_data[,i],type="l",col="black",ylab="Production [Trillion Btu]",main="Energy Production")
+  Acf(ts_energy_data[,i],lag.max=40,main=paste("Energy Production",i,sep="")) 
+  Pacf(ts_energy_data[,i],lag.max=40,main=paste("Energy Production",i,sep=""))
+}
+
+```
 
 ### Q2
 From the plot in Q1, do the series Total Biomass Energy Production, Total Renewable Energy Production, Hydroelectric Power Consumption appear to have a trend? If yes, what kind of trend?
 
+```{r Q2}
+t <- c(1:nobservation)
+df_energy_data <- data.frame(energy_data)
+
+for(i in 1:nproduction){
+  df_energy_data[,i+1] <- as.numeric(df_energy_data[,i+1])
+}
+##Biomass
+  linear_trend_model=lm(df_energy_data[,2]~t)  
+  summary(linear_trend_model)
+  Biobeta0=as.numeric(linear_trend_model$coefficients[1])  
+  Biobeta1=as.numeric(linear_trend_model$coefficients[2])  
+
+  ggplot(df_energy_data, aes(x=date, y=df_energy_data[,2])) +
+            geom_line(color="blue") +
+            ylab(paste0(colnames(df_energy_data)[2],sep="")) +
+            geom_smooth(color="red",method="lm")
+##Renewable
+  linear_trend_model=lm(df_energy_data[,3]~t)  
+  summary(linear_trend_model)
+  Renewbeta0=as.numeric(linear_trend_model$coefficients[1])  
+  Renewbeta1=as.numeric(linear_trend_model$coefficients[2])  
+
+  ggplot(df_energy_data, aes(x=date, y=df_energy_data[,3])) +
+            geom_line(color="blue") +
+            ylab(paste0(colnames(df_energy_data)[3],sep="")) +
+            geom_smooth(color="red",method="lm")
+##Hydroelectric
+  linear_trend_model=lm(df_energy_data[,4]~t)  
+  summary(linear_trend_model)
+  Hydrobeta0=as.numeric(linear_trend_model$coefficients[1])  
+  Hydrobeta1=as.numeric(linear_trend_model$coefficients[2])  
+
+  ggplot(df_energy_data, aes(x=date, y=df_energy_data[,4])) +
+            geom_line(color="blue") +
+            ylab(paste0(colnames(df_energy_data)[4],sep="")) +
+            geom_smooth(color="red",method="lm")
+```
+Both total renewable energy production and total biomass energy production present upward trends, while total hydroeoectric power shows a downward trend.
+
 ### Q3
 Use the *lm()* function to fit a linear trend to the three time series. Ask R to print the summary of the regression. Interpret the regression output, i.e., slope and intercept. Save the regression coefficients for further analysis.
+
+```{r Q3}
+Biolm=lm(ts_energy_data[,1]~t)
+summary(Biolm)
+Renewlm=lm(ts_energy_data[,2]~t)
+summary(Renewlm)
+Hydrolm=lm(ts_energy_data[,3]~t)
+summary(Hydrolm)
+
+```
  
 ### Q4
 Use the regression coefficients from Q3 to detrend the series. Plot the detrended series and compare with the plots from Q1. What happened? Did anything change?
 
+```{r}
+##Biomass
+detrend_Bioenergy_data <- df_energy_data[,2]-(Biobeta0+Biobeta1*t)
+  par(mfrow=c(1,3))
+  ggplot(df_energy_data, aes(x=date, y=df_energy_data[,2])) +
+            geom_line(color="blue") +
+            ylab(paste0(colnames(df_energy_data)[2],sep="")) +
+            geom_smooth(color="red",method="lm") +
+            geom_line(aes(y=detrend_energy_data), col="green")+
+            geom_smooth(aes(y=detrend_energy_data),color="orange",method="lm")
+##Renewable
+detrend_Renewenergy_data <- df_energy_data[,3]-(Renewbeta0+Renewbeta1*t)
+  par(mfrow=c(1,3))
+  ggplot(df_energy_data, aes(x=date, y=df_energy_data[,3])) +
+            geom_line(color="blue") +
+            ylab(paste0(colnames(df_energy_data)[3],sep="")) +
+            geom_smooth(color="red",method="lm") +
+            geom_line(aes(y=detrend_energy_data), col="green")+
+            geom_smooth(aes(y=detrend_energy_data),color="orange",method="lm")
+##Hydroelectric
+detrend_Hydroenergy_data <- df_energy_data[,4]-(Hydrobeta0+Hydrobeta1*t)
+  par(mfrow=c(1,3))
+  ggplot(df_energy_data, aes(x=date, y=df_energy_data[,4])) +
+            geom_line(color="blue") +
+            ylab(paste0(colnames(df_energy_data)[4],sep="")) +
+            geom_smooth(color="red",method="lm") +
+            geom_line(aes(y=detrend_energy_data), col="green")+
+            geom_smooth(aes(y=detrend_energy_data),color="orange",method="lm")
+```
+
 ### Q5
 Plot ACF and PACF for the detrended series and compare with the plots from Q1. Did the plots change? How?
+
+```{r Q5}
+    par(mfrow=c(1,3))
+  plot(detrend_Bioenergy_data,type="l",col="black",ylab="Production [Trillion Btu]",main="Energy Production")
+  Acf(detrend_Bioenergy_data,lag.max=40,main=paste("Energy Production",i,sep="")) 
+  Pacf(detrend_Bioenergy_data,lag.max=40,main=paste("Energy Production",i,sep=""))
+  
+    par(mfrow=c(1,3))
+  plot(detrend_Renewenergy_data,type="l",col="black",ylab="Production [Trillion Btu]",main="Energy Production")
+  Acf(detrend_Renewenergy_data,lag.max=40,main=paste("Energy Production",i,sep="")) 
+  Pacf(detrend_Renewenergy_data,lag.max=40,main=paste("Energy Production",i,sep=""))
+  
+    par(mfrow=c(1,3))
+  plot(detrend_Hydroenergy_data,type="l",col="black",ylab="Production [Trillion Btu]",main="Energy Production")
+  Acf(detrend_Hydroenergy_data,lag.max=40,main=paste("Energy Production",i,sep="")) 
+  Pacf(detrend_Hydroenergy_data,lag.max=40,main=paste("Energy Production",i,sep=""))
+
+```
 
 ## Seasonal Component
 
@@ -58,10 +188,118 @@ Set aside the detrended series and consider the original series again from Q1 to
 ### Q6
 Do the series seem to have a seasonal trend? Which serie/series? Use function *lm()* to fit a seasonal means model (i.e. using the seasonal dummies) to this/these time series. Ask R to print the summary of the regression. Interpret the regression output. Save the regression coefficients for further analysis.
 
+```{r Q6Bio}
+
+Biodummies <- seasonaldummy(ts_energy_data[,1])  
+
+Bioseas_means_model=lm(df_energy_data[,2]~Biodummies)
+summary(Bioseas_means_model)
+
+Biobeta_int=Bioseas_means_model$coefficients[1]
+Biobeta_coeff=Bioseas_means_model$coefficients[2:12]
+
+Bioenergy_seas_comp=array(0,nobservation)
+for(i in 1:nobservation){
+  Bioenergy_seas_comp[i]=(Biobeta_int+Biobeta_coeff%*%Biodummies[i,])
+}
+
+ggplot(df_energy_data, aes(x=date, y=df_energy_data[,2])) +
+            geom_line(color="blue") +
+            ylab(paste0(colnames(df_energy_data)[2],sep="")) +
+            geom_line(aes(y=Bioenergy_seas_comp), col="red")
+
+```
+```{r Q6Renew}
+
+Renewdummies <- seasonaldummy(ts_energy_data[,2])  
+
+Renewseas_means_model=lm(df_energy_data[,3]~Renewdummies)
+summary(Renewseas_means_model)
+
+Renewbeta_int=Renewseas_means_model$coefficients[1]
+Renewbeta_coeff=Renewseas_means_model$coefficients[2:12]
+
+Renewenergy_seas_comp=array(0,nobservation)
+for(i in 1:nobservation){
+  Renewenergy_seas_comp[i]=(Renewbeta_int+Renewbeta_coeff%*%Renewdummies[i,])
+}
+
+ggplot(df_energy_data, aes(x=date, y=df_energy_data[,3])) +
+            geom_line(color="blue") +
+            ylab(paste0(colnames(df_energy_data)[3],sep="")) +
+            geom_line(aes(y=Renewenergy_seas_comp), col="red")
+
+```
+
+```{r Q6Hydro}
+
+Hydrodummies <- seasonaldummy(ts_energy_data[,3])  
+
+Hydroseas_means_model=lm(df_energy_data[,4]~Hydrodummies)
+summary(Hydroseas_means_model)
+
+Hydrobeta_int=Hydroseas_means_model$coefficients[1]
+Hydrobeta_coeff=Hydroseas_means_model$coefficients[2:12]
+
+Hydroenergy_seas_comp=array(0,nobservation)
+for(i in 1:nobservation){
+  Hydroenergy_seas_comp[i]=(Hydrobeta_int+Hydrobeta_coeff%*%Hydrodummies[i,])
+}
+
+ggplot(df_energy_data, aes(x=date, y=df_energy_data[,4])) +
+            geom_line(color="blue") +
+            ylab(paste0(colnames(df_energy_data)[4],sep="")) +
+            geom_line(aes(y=Hydroenergy_seas_comp), col="red")
+
+```
+
 ### Q7
 Use the regression coefficients from Q6 to deseason the series. Plot the deseason series and compare with the plots from part Q1. Did anything change?
 
+```{r Q7}
+
+Biodeseason_energy_data <- df_energy_data[,2]-Bioenergy_seas_comp
+
+  ggplot(df_energy_data, aes(x=date, y=df_energy_data[,2])) +
+            geom_line(color="blue") +
+            ylab(paste0(colnames(df_energy_data)[2],sep="")) +
+            geom_line(aes(y=Biodeseason_energy_data), col="green")
+
+Renewdeseason_energy_data <- df_energy_data[,3]-Renewenergy_seas_comp
+
+  ggplot(df_energy_data, aes(x=date, y=df_energy_data[,3])) +
+            geom_line(color="blue") +
+            ylab(paste0(colnames(df_energy_data)[3],sep="")) +
+            geom_line(aes(y=Renewdeseason_energy_data), col="green")
+
+Hydrodeseason_energy_data <- df_energy_data[,4]-Hydroenergy_seas_comp
+
+  ggplot(df_energy_data, aes(x=date, y=df_energy_data[,4])) +
+            geom_line(color="blue") +
+            ylab(paste0(colnames(df_energy_data)[4],sep="")) +
+            geom_line(aes(y=Hydrodeseason_energy_data), col="green")
+```
+
 ### Q8
 Plot ACF and PACF for the deseason series and compare with the plots from Q1. Did the plots change? How?
+
+```{r Q8}
+par(mfrow=c(1,3))
+  plot(Biodeseason_energy_data,type="l",col="black",ylab="Production [Trillion Btu]",main="Energy Production")
+  Acf(Biodeseason_energy_data,lag.max=40,main=paste("Energy Production",i,sep="")) 
+  Pacf(Biodeseason_energy_data,lag.max=40,main=paste("Energy Production",i,sep=""))
+  
+par(mfrow=c(1,3))
+  plot(Renewdeseason_energy_data,type="l",col="black",ylab="Production [Trillion Btu]",main="Energy Production")
+  Acf(Renewdeseason_energy_data,lag.max=40,main=paste("Energy Production",i,sep="")) 
+  Pacf(Renewdeseason_energy_data,lag.max=40,main=paste("Energy Production",i,sep=""))
+  
+par(mfrow=c(1,3))
+  plot(Hydrodeseason_energy_data,type="l",col="black",ylab="Production [Trillion Btu]",main="Energy Production")
+  Acf(Hydrodeseason_energy_data,lag.max=40,main=paste("Energy Production",i,sep="")) 
+  Pacf(Hydrodeseason_energy_data,lag.max=40,main=paste("Energy Production",i,sep=""))
+
+```
+
 
 
