@@ -1,11 +1,11 @@
 ---
 title: "ENV 790.30 - Time Series Analysis for Energy Data | Spring 2022"
 subtitle: "Assignment 5 - Due date 02/28/22"
-author: "Student Name"
+author: "Richard Zhang"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## Directions
@@ -37,7 +37,7 @@ Consider the same data you used for A04 from the spreadsheet "Table_10.1_Renewab
 
 ```{r}
 #Importing data set - using xlsx package
-energy_data <- read.xlsx(file="./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",header=FALSE,startRow = 13,sheetIndex=1) #startRow is equivalent to skip on read.table
+energy_data <- read.xlsx(file="/Users/RichardZ/Downloads/ENV790_TimeSeriesAnalysis_Sp2022/Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",header=FALSE,startRow = 13,sheetIndex=1) 
 
 #Now let's extract the column names from row 11 only
 read_col_names <- read.xlsx(file="./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",header=FALSE,startRow = 11,endRow=11,sheetIndex=1)
@@ -55,7 +55,11 @@ nvar=ncol(energy_data)
 For this assignment you will work only with the following columns: Solar Energy Consumption and Wind Energy Consumption. Create a data frame structure with these two time series only and the Date column. Drop the rows with *Not Available* and convert the columns to numeric. You can use filtering to eliminate the initial rows or convert to numeric and then use the drop_na() function. If you are familiar with pipes for data wrangling, try using it!
 
 ```{r}
+energy_data <- select(energy_data, c('Month', 'Solar Energy Consumption', 'Wind Energy Consumption'))
+energy_data$`Solar Energy Consumption` <- as.numeric(energy_data$`Solar Energy Consumption`)
+energy_data$`Wind Energy Consumption` <- as.numeric(energy_data$`Wind Energy Consumption`)
 
+energy_data <- drop_na(energy_data)
 
 ```
 
@@ -64,6 +68,20 @@ For this assignment you will work only with the following columns: Solar Energy 
 Plot the Solar and Wind energy consumption over time using ggplot. Plot each series on a separate graph. No need to add legend. Add informative names to the y axis using `ylab()`. Explore the function scale_x\_date() on ggplot and see if you can change the x axis to improve your plot. Hint: use *scale_x\_date(date_breaks = "5 years", date_labels = "%Y")")*
 
 ```{r}
+solar_plot <- ggplot(energy_data, aes(x=energy_data$Month)) +
+  ylab(paste0("Solar Energy Consumption")) +
+  xlab(paste0("Date")) +
+  geom_line(aes(y=energy_data$`Solar Energy Consumption`)) +
+  scale_x_date(date_breaks = "5 years", date_labels = "%Y")
+
+wind_plot <- ggplot(energy_data, aes(x=energy_data$Month)) +
+  ylab(paste0("Wind Energy Consumption")) +
+  xlab(paste0("Date")) +
+  geom_line(aes(y=energy_data$`Wind Energy Consumption`)) +
+  scale_x_date(date_breaks = "5 years", date_labels = "%Y")
+
+solar_plot
+wind_plot
 
 ```
 
@@ -72,8 +90,15 @@ Plot the Solar and Wind energy consumption over time using ggplot. Plot each ser
 Now plot both series in the same graph, also using ggplot(). Look at lines 142-149 of the file `05_Lab_OutliersMissingData_Solution` to learn how to manually add a legend to ggplot. Make the solar energy consumption red and wind energy consumption blue. Add informative name to the y axis using `ylab("Energy Consumption)`. And use function scale_x\_date() again to improve x axis.
 
 ```{r}
+consumption_plot <- ggplot(energy_data, aes(x=energy_data$Month)) +
+            ylab(paste0("Energy Consumption")) +
+            xlab(paste0("Date"))+
+            geom_line(aes(y=energy_data$`Solar Energy Consumption`, color="Solar"))+
+            geom_line(aes(y=energy_data$`Wind Energy Consumption`, color="Wind"))+
+            scale_color_manual(values = c("red","blue"))+
+            scale_x_date(date_breaks = "5 years", date_labels = "%Y")
 
-
+consumption_plot
 
 ```
 
@@ -82,6 +107,16 @@ Now plot both series in the same graph, also using ggplot(). Look at lines 142-1
 Transform wind and solar series into a time series object and apply the decompose function on them using the additive option, i.e., `decompose(ts_data, type = "additive")`. What can you say about the trend component? What about the random component? Does the random component look random? Or does it appear to still have some seasonality on it?
 
 ```{r}
+ts_energy_data <- ts(energy_data[,2:3],
+                           start=c(year(energy_data$Month[1]),
+                                   month(energy_data$Month[1])),
+                           frequency=12) 
+
+decompose_solar_additive <- decompose(ts_energy_data[,"Solar Energy Consumption"],"additive")
+plot(decompose_solar_additive)
+
+decompose_wind_additive <- decompose(ts_energy_data[,"Wind Energy Consumption"],"additive")
+plot(decompose_wind_additive)
 
 ```
 
@@ -90,6 +125,11 @@ Transform wind and solar series into a time series object and apply the decompos
 Use the decompose function again but now change the type of the seasonal component from additive to multiplicative. What happened to the random component this time?
 
 ```{r}
+decompose_solar_multiplicative <- decompose(ts_energy_data[,"Solar Energy Consumption"],"multiplicative")
+plot(decompose_solar_multiplicative)
+
+decompose_wind_multiplicative <- decompose(ts_energy_data[,"Wind Energy Consumption"],"multiplicative")
+plot(decompose_wind_multiplicative)
 
 ```
 
@@ -104,6 +144,17 @@ When fitting a model to this data, do you think you need all the historical data
 Create a new time series object where historical data starts on January 2012. Hint: use `filter()` function so that you don't need to point to row numbers, .i.e, `filter(xxxx, year(Date) >= 2012 )`. Apply the decompose function `type=additive` to this new time series. Comment the results. Does the random component look random? Think about our discussion in class about trying to remove the seasonal component and the challenge of trend on the seasonal component.
 
 ```{r}
+new_energy_data <- filter(energy_data, year(Month) >= 2012)
+new_ts_energy_data <- ts(new_energy_data[,2:3],
+                           start=c(year(new_energy_data$Month[1]),
+                                   month(new_energy_data$Month[1])),
+                           frequency=12) 
+
+decompose_new_solar <- decompose(new_ts_energy_data[,"Solar Energy Consumption"],"additive")
+plot(decompose_new_solar)
+
+decompose_nwe_wind <- decompose(new_ts_energy_data[,"Wind Energy Consumption"],"additive")
+plot(decompose_nwe_wind)
 
 ```
 
