@@ -40,7 +40,7 @@ Consider the same data you used for A04 from the spreadsheet "Table_10.1_Renewab
 energy_data <- read.xlsx(file="/Users/RichardZ/Downloads/ENV790_TimeSeriesAnalysis_Sp2022/Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",header=FALSE,startRow = 13,sheetIndex=1) 
 
 #Now let's extract the column names from row 11 only
-read_col_names <- read.xlsx(file="./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",header=FALSE,startRow = 11,endRow=11,sheetIndex=1)
+read_col_names <- read.xlsx(file="../Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",header=FALSE,startRow = 11,endRow=11,sheetIndex=1)
 
 colnames(energy_data) <- read_col_names
 head(energy_data)
@@ -119,6 +119,7 @@ decompose_wind_additive <- decompose(ts_energy_data[,"Wind Energy Consumption"],
 plot(decompose_wind_additive)
 
 ```
+> Answer:Solar energy consumption shows a significant upward trend after 2010, and wind energy consumption starts to increase since 2007. For the random component, solar shows greater fluctuation than wind; and both graphs show more movements in random components when the respective energy consumption starts to have an upward trend. Solar still has seasonality on it, while wind shows little seasonality.
 
 ### Q4
 
@@ -132,12 +133,13 @@ decompose_wind_multiplicative <- decompose(ts_energy_data[,"Wind Energy Consumpt
 plot(decompose_wind_multiplicative)
 
 ```
+> Answer:The random components are much more stable and show insignificant seasonality.
 
 ### Q5
 
 When fitting a model to this data, do you think you need all the historical data? Think about the data from 90s and early 20s. Are there any information from those years we might need to forecast the next six months of Solar and/or Wind consumption. Explain your response.
 
-> Answer:
+> Answer:We don’t need all the historical data. The data from 90s and early 20s have very different patterns than that from the later years.
 
 ### Q6
 
@@ -158,7 +160,7 @@ plot(decompose_nwe_wind)
 
 ```
 
-> Answer:
+> Answer:The random component looks random for wind but not for solar. The overall results of this output correspond with the previous graphs.
 
 
 
