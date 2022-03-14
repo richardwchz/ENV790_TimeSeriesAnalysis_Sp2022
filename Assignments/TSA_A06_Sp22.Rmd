@@ -126,11 +126,11 @@ Consider the ARIMA model $y_t=0.7*y_{t-1}-0.25*y_{t-12}+a_t-0.1*a_{t-1}$
 
 \item Identify the model using the notation ARIMA$(p,d,q)(P,D,Q)_ s$, i.e., identify the integers $p,d,q,P,D,Q,s$ (if possible) from the equation.
 p = 1
-d = 
+d = 0
 q = 1
-P = 
-D = 
-Q = 
+P = 0
+D = 0
+Q = 1
 s = 12
 
 \item Also from the equation what are the values of the parameters, i.e., model coefficients. 
