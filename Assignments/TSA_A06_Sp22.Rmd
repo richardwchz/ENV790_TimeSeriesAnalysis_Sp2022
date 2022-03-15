@@ -88,11 +88,11 @@ Pacf(arma,lag.max=40)
 
 \item Look at the ACFs and PACFs. Imagine you had these plots for a data set and you were asked to identify the model, i.e., is it AR, MA or ARMA and the order of each component. Would you be identify them correctly? Explain your answer.
 
-> Answer: 
+> Answer: For the AR model, I can identify it using the PACF plot but not the ACF plot, as the ACF plot does not show a exponential decay over time. For the MA model, it can be identified using the PACF plot but not the ACF plot. It would be hard to correctly identify the ARMA model using the ACF and PACF plots available.
 
 \item Compare the ACF and PACF values R computed with the theoretical values you provided for the coefficients. Do they match? Explain your answer.
 
-> Answer: 
+> Answer: They do not match. A much longer time series is needed before the coefficient estimates will converge to their true values.
 
 
 \item Increase number of observations to $n=1000$ and repeat parts (a)-(d).
@@ -146,4 +146,4 @@ seasonal <- ts(sarima.sim(ma=0.5, sar=0.8, S=12, n=1000))
 Acf(seasonal, lag.max=40)
 Pacf(seasonal, lag.max=40)
 ```
-
+>: The ACF plot shows a non-stationary and seasonal process, therefore d and D are both 0. At lag 2 in the ACF plot, there is a sharp cut-off, meaning that this is a MA process, and the order could be 1. In the PACF plot, lag 2 is still significant, suggesting a slow decay that implies MA process too. In the ACF plot, there are multiple spikes at season lag, which means this is a SAR process. Since P+Q <= 1, the order of SAR is 1 and there is no SMA process. 
