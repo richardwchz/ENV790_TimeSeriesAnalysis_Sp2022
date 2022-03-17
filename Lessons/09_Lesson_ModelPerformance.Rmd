@@ -24,9 +24,9 @@ Second R code chunk is for loading packages. By setting message = FALSE, the cod
 library(lubridate)
 library(ggplot2)
 library(forecast)  
-#library(Kendall)
+library(Kendall)
 library(tseries)
-#library(outliers)
+library(outliers)
 library(tidyverse)
 library(smooth)
 
@@ -182,7 +182,7 @@ plot(SNAIVE_seas)
 
 # Model 3:  SARIMA 
 #remember auto.arima does not call the forecast() internally so we need one more step
-SARIMA_for <- forecast(SARIMA_autofit,h=12)
+SARIMA_for <- forecast(c(SARIMA_autofit,h=12))
 SARIMA_scores <- accuracy(SARIMA_for)
 plot(SARIMA_for)
 
