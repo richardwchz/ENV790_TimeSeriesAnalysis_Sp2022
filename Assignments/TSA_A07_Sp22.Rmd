@@ -66,6 +66,7 @@ Acf(deseasonal_naturalgas,lag.max=40)
 Pacf(deseasonal_naturalgas,lag.max=40)
 
 ```
+>ACF plot shows a much more consistent decrease comparing to the ACF plot in Q1, and seasonality is removed. The PACF plot shows a clear cut at lag 2, while the plot in Q1 does not have such cut.
 
 ## Modeling the seasonally adjusted or deseasonalized series
 
@@ -78,28 +79,29 @@ MannKendall(deseasonal_naturalgas)
 adf.test(deseasonal_naturalgas)
 
 ```
+> Mann-Kendall test return a p-value that is smaller than 0.05, therefore we reject the null hypothesis. That means the series has a trend. The adf test yields a small p-value, meaning the series is stationary.
+
+ It matches what is observed in Q2, as the plot in Q2 shows a upward trend for the original series. 
 
 ### Q4
 
 Using the plots from Q2 and test results from Q3 identify the ARIMA model parameters $p,d$ and $q$. Note that in this case because you removed the seasonal component prior to identifying the model you don't need to worry about seasonal component. Clearly state your criteria and any additional function in R you might use. DO NOT use the $auto.arima()$ function. You will be evaluated on ability to can read the plots and interpret the test results.
 
-```{r}
-auto.arima(deseasonal_naturalgas)
-
-```
+>According to adf test in Q3, the series is stationary and no differencing is needed. Therefore, d should be 0. In the previous PACF plot, PACF reduces to arund 0 at lag 2, meaning the AR component is 2, and p=2. The ACF plot does not show a sharp decrease and a clear cut in the plot, therefore no MA component is observed, and q=0. The parameters for this ARIMA model should be (2,0,0) 
 
 ### Q5
 
 Use $Arima()$ from package "forecast" to fit an ARIMA model to your series considering the order estimated in Q4. Should you allow for constants in the model, i.e., $include.mean = TRUE$ or $include.drift=TRUE$. **Print the coefficients** in your report. Hint: use the $cat()$ function to print.
 
 ```{r}
-arima_naturalgas <- Arima(deseasonal_naturalgas, order=c(3,1,0), seasonal = list(order=c(1,0,1), period=12))
+arima_naturalgas <- Arima(deseasonal_naturalgas, order=c(2,0,0))
 arima_naturalgas
-Arima(deseasonal_naturalgas, order=c(3,1,0), seasonal = list(order=c(1,0,1), period=12), include.mean = FALSE)
-Arima(deseasonal_naturalgas, order=c(3,1,0), seasonal = list(order=c(1,0,1), period=12), include.drift = FALSE)
+Arima(deseasonal_naturalgas, order=c(2,0,0), include.mean = FALSE)
+Arima(deseasonal_naturalgas, order=c(2,0,0), include.drift = FALSE)
 
 cat("The coefficients for the arima model are:", coef(arima_naturalgas))    
 ```
+> The second model produces lower BIC, thus it is preferred. Therefore constants in the model should not be allowed.
 
 ### Q6
 
@@ -108,6 +110,7 @@ Now plot the residuals of the ARIMA fit from Q5 along with residuals ACF and PAC
 ```{r}
 checkresiduals(arima_naturalgas)
 ```
+> The residuals roughly follow a normal distribution, and the residuals plot shows that the variable is independent and identically distributed with a mean of zero. The residual series should be a white noise series. 
 
 ## Modeling the original series (with seasonality)
 
@@ -116,9 +119,7 @@ checkresiduals(arima_naturalgas)
 Repeat Q4-Q6 for the original series (the complete series that has the seasonal component). Note that when you model the seasonal series, you need to specify the seasonal part of the ARIMA model as well, i.e., $P$, $D$ and $Q$.
 
 ```{r}
-auto.arima(ts_naturalgas)
-
-arima_ts_naturalgas <- Arima(ts_naturalgas, order=c(2,0,1), seasonal = list(order=c(2,1,2), period=12))
+arima_ts_naturalgas <- Arima(ts_naturalgas, order=c(2,0,0), seasonal = list(order=c(0,1,1), period=12))
 arima_ts_naturalgas
 cat("The coefficients for the arima model are:", coef(arima_ts_naturalgas))    
 
@@ -130,7 +131,7 @@ checkresiduals(arima_ts_naturalgas)
 
 Compare the residual series for Q7 and Q6. Can you tell which ARIMA model is better representing the Natural Gas Series? Is that a fair comparison? Explain your response.
 
->
+> The model in Q6 is better represents the natural gas series, as the residual series for the model in Q6 is closer to a white noise series than the one in Q7. In Q7, the residuals plot has an average below zero and has a significant ACF value spike. Other criterias, such as BIC, should also be considered to determine which model is better.
 
 ## Checking your model with the auto.arima()
 
@@ -143,7 +144,7 @@ Use the $auto.arima()$ command on the **deseasonalized series** to let R choose 
 ```{r}
 auto.arima(deseasonal_naturalgas)
 ```
-
+> It is different from my answer in Q4.
 
 ### Q10
 
@@ -152,4 +153,4 @@ Use the $auto.arima()$ command on the **original series** to let R choose the mo
 ```{r}
 auto.arima(ts_naturalgas)
 ```
-
+> It does not match my answer in Q7.
